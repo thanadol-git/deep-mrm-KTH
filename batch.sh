@@ -58,3 +58,4 @@ find "$MZML_DIR" -name "*.mzML" | parallel -j "$CORES" process_mzml
 # Inform the user that all predictions have been completed
 echo "All predictions completed"
 echo "Total number of files processed: $PROCESSED_COUNT"
+
