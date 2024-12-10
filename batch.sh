@@ -1,35 +1,60 @@
 #!/bin/bash
-# Directory containing .mzML files
-MZML_DIR="./2024 Khue temp"
-# Directory containing target files is same as mzmldir
-TARGET_DIR=$MZML_DIR
 
-# Target file (assuming it’s the same for all .mzML files)
-TARGET_FILE="$TARGET_DIR/Vebios_ComplemEdge_deepmrm_20241108.csv"
-# Calculate half of the available cores (rounded down)
-TOTAL_CORES=$(nproc)
-#CORES=$((TOTAL_CORES / 2))
+# Default values
 CORES=1
+MZML_DIR=""
+TARGET_FILE=""
+
+# Parse command-line options
+while getopts "c:t:i:" opt; do
+  case $opt in
+    c)
+      CORES=$OPTARG
+      ;;
+    t)
+      TARGET_FILE=$OPTARG
+      ;;
+    i)
+      MZML_DIR=$OPTARG
+      ;;
+    *)
+      echo "Usage: $0 [-c number_of_cores] [-t target_file] [-i input_directory]"
+      exit 1
+      ;;
+  esac
+done
+
 # Ensure at least one core is used
 if [ $CORES -lt 1 ]; then
     CORES=1
 fi
+
+# Ensure target file and input directory are provided
+if [ -z "$TARGET_FILE" ] || [ -z "$MZML_DIR" ]; then
+  echo "Both target file and input directory must be specified."
+  echo "Usage: $0 [-c number_of_cores] [-t target_file] [-i input_directory]"
+  exit 1
+fi
+
+# Initialize the counter
+PROCESSED_COUNT=0
+
 # Function to process a single .mzML file
 process_mzml() {
     mzml_file="$1"
     python deepmrm/predict/make_prediction.py -target "$TARGET_FILE" -input "$mzml_file"
     echo "Prediction completed for $mzml_file"
+    ((PROCESSED_COUNT++))
 }
-# Export the function so it’s available to parallel
+
+# Export the function and variables so they are available to parallel
 export -f process_mzml
-# Export the TARGET_FILE variable so it’s available in the parallel execution environment
 export TARGET_FILE
-# Run the command in parallel for all .mzML files in the directory by sorting the file names
-# and passing them to parallel
-find "$MZML_DIR" -name "*.mzML" | sort | parallel -j "$CORES" process_mzml
+export -n PROCESSED_COUNT
 
-# find "$MZML_DIR" -name "*.mzML" | parallel -j "$CORES" process_mzml
+# Run the command in parallel for all .mzML files in the directory
+find "$MZML_DIR" -name "*.mzML" | parallel -j "$CORES" process_mzml
 
-# Inform the user that all predictions have been completed after the last mzml 
-# file has been processed
+# Inform the user that all predictions have been completed
 echo "All predictions completed"
+echo "Total number of files processed: $PROCESSED_COUNT"
