@@ -53,13 +53,13 @@ if __name__ == "__main__":
     top1_files, not_top1_files = list_and_group_csv_files(input_directory)
     
     if top1_files:
-        concat_csv_files(top1_files, input_directory, output_directory, 'top1.csv')
+        concat_csv_files(top1_files, input_directory, output_directory, 'concatenated_top1.csv')
         print(f"Concatenated 'top1' CSV file saved to {os.path.join(output_directory, 'top1.csv')}")
     else:
         print("No 'top1' files found to concatenate.")
     
     if not_top1_files:
-        concat_csv_files(not_top1_files, input_directory, output_directory, 'all.csv')
+        concat_csv_files(not_top1_files, input_directory, output_directory, 'concatenated_top1_all.csv')
         print(f"Concatenated 'all' CSV file saved to {os.path.join(output_directory, 'all.csv')}")
     else:
         print("No 'not top1' files found to concatenate.")
